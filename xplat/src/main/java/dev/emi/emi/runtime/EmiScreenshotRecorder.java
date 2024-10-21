@@ -71,7 +71,7 @@ public class EmiScreenshotRecorder {
 		view.translate(-1.0f, 1.0f, 0.0f);
 		view.scale(2f / width, -2f / height, -1f / 1000f);
 		view.translate(0.0f, 0.0f, 10.0f);
-		RenderSystem.applyModelViewMatrix();
+		EmiPort.applyModelViewMatrix();
 
 		Matrix4f backupProj = RenderSystem.getProjectionMatrix();
 		RenderSystem.setProjectionMatrix(new Matrix4f().identity(), VertexSorter.BY_Z);
@@ -80,7 +80,7 @@ public class EmiScreenshotRecorder {
 
 		RenderSystem.setProjectionMatrix(backupProj, VertexSorter.BY_Z);
 		view.popMatrix();
-		RenderSystem.applyModelViewMatrix();
+		EmiPort.applyModelViewMatrix();
 
 		framebuffer.endWrite();
 		client.getFramebuffer().beginWrite(true);

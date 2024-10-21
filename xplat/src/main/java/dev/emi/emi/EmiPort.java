@@ -229,4 +229,8 @@ public final class EmiPort {
 	public static Identifier id(String namespace, String path) {
 		return Identifier.of(namespace, path);
 	}
+
+	public static void applyModelViewMatrix() {
+		RenderSystem.applyModelViewMatrix();
+	}
 }
