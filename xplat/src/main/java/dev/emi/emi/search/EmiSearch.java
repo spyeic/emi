@@ -34,7 +34,19 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public class EmiSearch {
-	public static final Pattern TOKENS = Pattern.compile("(-?[@#]?\\/(\\\\.|[^\\\\\\/])+\\/|[^\\s]+)");
+	public static final Pattern TOKENS = Pattern.compile(
+		"-?[@#$]?" // Any query can be negated or prefixed with type
+		+ "(" // Query contents
+			+ "\\/(\\\\.|[^\\\\\\/])+\\/" // Any regex contents, for example `/some thing/`
+			+ "|"
+			+ "\\\"(\\.|[^\\\"])+\\\"" // Any quoted contents, for example, `"some thing"`
+			+ "|"
+			+ "[^\\s|]+" // Any raw contents, split on space
+			+ "|"
+			+ "\\|" // Literal OR symbol
+			+ "|"
+			+ "\\&" // Literal AND symbol (currently ignored since queries AND by deafult, but parsed)
+		+ ")");
 	private static volatile SearchWorker currentWorker = null;
 	public static volatile Thread searchThread = null;
 	public static volatile List<? extends EmiIngredient> stacks = EmiStackList.stacks;
@@ -147,18 +159,21 @@ public class EmiSearch {
 			Matcher matcher = TOKENS.matcher(query);
 			while (matcher.find()) {
 				String q = matcher.group();
-				if (q.equals("|")) {
-					if (!queries.isEmpty()) {
-						full.add(new LogicalAndQuery(queries));
-						queries = Lists.newArrayList();
-					}
-					continue;
-				}
 				boolean negated = q.startsWith("-");
 				if (negated) {
 					q = q.substring(1);
 				}
 				if (q.isEmpty()) {
+					continue;
+				}
+				if (q.equals("&")) {
+					// Default behavior
+					continue;
+				} else if (q.equals("|")) {
+					if (!queries.isEmpty()) {
+						full.add(new LogicalAndQuery(queries));
+						queries = Lists.newArrayList();
+					}
 					continue;
 				}
 				QueryType type = QueryType.fromString(q);
@@ -219,6 +234,8 @@ public class EmiSearch {
 			Query q;
 			if (s.length() > 1 && s.startsWith("/") && s.endsWith("/")) {
 				q = regex.apply(s.substring(1, s.length() - 1));
+			} else if (s.length() > 1 && s.startsWith("\"") && s.endsWith("\"")) {
+				q = normal.apply(s.substring(1, s.length() - 1));
 			} else {
 				q = normal.apply(s);
 			}
