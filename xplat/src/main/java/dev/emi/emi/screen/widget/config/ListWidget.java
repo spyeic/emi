@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.Lists;
@@ -37,9 +36,6 @@ import net.minecraft.util.math.MathHelper;
  * This is the lesser of two evils, at least this way I have vanilla compat.
  */
 public class ListWidget extends AbstractParentElement implements Drawable, Selectable {
-	private static final Identifier MENU_LIST_BACKGROUND_TEXTURE = EmiPort.id("minecraft", "textures/gui/menu_list_background.png");
-	private static final Identifier INWORLD_MENU_LIST_BACKGROUND_TEXTURE = EmiPort.id("minecraft", "textures/gui/inworld_menu_list_background.png");
-
 	protected final MinecraftClient client;
 	private final List<Entry> children = Lists.newArrayList();
 	protected int width;
@@ -189,12 +185,10 @@ public class ListWidget extends AbstractParentElement implements Drawable, Selec
 				.next();
 			tessellator.draw();
 		}
-
-		draw.enableScissor(left, top, right, bottom);
+		
 		int k = this.getRowLeft();
 		int l = this.top + 4 - (int)this.getScrollAmount();
 		this.renderList(draw, k, l, mouseX, mouseY, delta);
-		draw.disableScissor();
 
 
 		{	// Render horizontal shadows
