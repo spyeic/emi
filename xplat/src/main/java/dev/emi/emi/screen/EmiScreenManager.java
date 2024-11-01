@@ -58,6 +58,7 @@ import dev.emi.emi.runtime.EmiFavorites;
 import dev.emi.emi.runtime.EmiHidden;
 import dev.emi.emi.runtime.EmiHistory;
 import dev.emi.emi.runtime.EmiLog;
+import dev.emi.emi.runtime.EmiProfiler;
 import dev.emi.emi.runtime.EmiReloadLog;
 import dev.emi.emi.runtime.EmiReloadManager;
 import dev.emi.emi.runtime.EmiSidebars;
@@ -574,7 +575,7 @@ public class EmiScreenManager {
 		recalculate();
 		EmiScreenBase base = EmiScreenBase.getCurrent();
 		if (base != null) {
-			client.getProfiler().push("sidebar");
+			EmiProfiler.push("sidebar");
 			for (SidebarPanel panel : panels) {
 				panel.drawBackground(context, mouseX, mouseY, delta);
 			}
@@ -582,7 +583,7 @@ public class EmiScreenManager {
 	}
 
 	public static void render(EmiDrawContext context, int mouseX, int mouseY, float delta) {
-		client.getProfiler().push("emi");
+		EmiProfiler.push("emi");
 		updateMouse(mouseX, mouseY);
 		recalculate();
 		EmiScreenBase base = EmiScreenBase.getCurrent();
@@ -610,7 +611,7 @@ public class EmiScreenManager {
 					}
 				}
 			}
-			client.getProfiler().pop();
+			EmiProfiler.pop();
 			lastHoveredCraftable = null;
 			return;
 		} else if (EmiRecipes.activeWorker != null) {
@@ -619,20 +620,20 @@ public class EmiScreenManager {
 			renderDevMode(context, mouseX, mouseY, delta, base);
 		}
 		renderWidgets(context, mouseX, mouseY, delta, base);
-		client.getProfiler().push("sidebars");
+		EmiProfiler.push("sidebars");
 		for (SidebarPanel panel : panels) {
 			panel.render(context, mouseX, mouseY, delta);
 		}
 
 		renderLastHoveredCraftable(context, mouseX, mouseY, delta, base);
 
-		client.getProfiler().pop();
+		EmiProfiler.pop();
 
 		renderExclusionAreas(context, mouseX, mouseY, delta, base);
 
-		client.getProfiler().swap("slots");
+		EmiProfiler.swap("slots");
 		renderSlotOverlays(context, mouseX, mouseY, delta, base);
-		client.getProfiler().pop();
+		EmiProfiler.pop();
 
 		RenderSystem.disableDepthTest();
 	}
@@ -663,14 +664,14 @@ public class EmiScreenManager {
 					MatrixStack view = RenderSystem.getModelViewStack();
 					view.push();
 					view.translate(0, 0, 200);
-					RenderSystem.applyModelViewMatrix();
+					EmiPort.applyModelViewMatrix();
 					int lhx = space.getRawX(lastHoveredCraftableOffset);
 					int lhy = space.getRawY(lastHoveredCraftableOffset);
 					context.fill(lhx, lhy, 18, 18, 0x44AA00FF);
 					lastHoveredCraftable.getStack().render(context.raw(), lhx + 1, lhy + 1, delta,
 							EmiIngredient.RENDER_ICON);
 					view.pop();
-					RenderSystem.applyModelViewMatrix();
+					EmiPort.applyModelViewMatrix();
 				}
 			}
 		}
@@ -727,7 +728,7 @@ public class EmiScreenManager {
 			}
 		}
 		if (cursor.isEmpty() && draggedStack.isEmpty()) {
-			client.getProfiler().swap("hover");
+			EmiProfiler.swap("hover");
 			EmiIngredient hov = EmiStack.EMPTY;
 			SidebarType sidebar = SidebarType.NONE;
 			if (getHoveredStack(mouseX, mouseY, false) instanceof SidebarEmiStackInteraction sesi) {
@@ -751,7 +752,7 @@ public class EmiScreenManager {
 			} else {
 				EmiRenderHelper.drawTooltip(base.screen(), context, list, mouseX, mouseY);
 			}
-			client.getProfiler().pop();
+			EmiProfiler.pop();
 		}
 		lastStackTooltipRendered = null;
 	}
@@ -759,7 +760,7 @@ public class EmiScreenManager {
 	private static void renderDevMode(EmiDrawContext context, int mouseX, int mouseY, float delta, EmiScreenBase base) {
 		if (EmiConfig.devMode) {
 			Screen screen = base.screen();
-			client.getProfiler().swap("dev");
+			EmiProfiler.swap("dev");
 			int color = 0xFFFFFF;
 			Text title = EmiPort.literal("EMI Dev Mode");
 			int off = -16;
@@ -1433,7 +1434,7 @@ public class EmiScreenManager {
 				}
 			}
 			if (isVisible()) {
-				client.getProfiler().swap(side.getName());
+				EmiProfiler.swap(side.getName());
 				context.push();
 				context.matrices().translate(0, 0, 100);
 				pageLeft.render(context.raw(), mouseX, mouseY, delta);
