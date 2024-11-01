@@ -238,7 +238,7 @@ public class EmiSearchWidget extends TextFieldWidget {
 			view.translate(this.x + this.width / 2, this.y + this.height / 2, 0);
 			view.multiply(RotationAxis.NEGATIVE_Z.rotationDegrees(deg));
 			view.translate(-(this.x + this.width / 2), -(this.y + this.height / 2), 0);
-			RenderSystem.applyModelViewMatrix();
+			EmiPort.applyModelViewMatrix();
 		}
 
 		if (lower.contains("jeb_")) {
@@ -260,6 +260,6 @@ public class EmiSearchWidget extends TextFieldWidget {
 		}
 		context.resetColor();
 		view.pop();
-		RenderSystem.applyModelViewMatrix();
+		EmiPort.applyModelViewMatrix();
 	}
 }

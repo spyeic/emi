@@ -12,3 +12,10 @@ description = '''
 A featureful and accessible item and recipe viewer
 '''
 logoFile = "icon.png"
+
+[[dependencies.emi]]
+modId = "jei"
+mandatory = false
+versionRange = "[15.20.0.0,)"
+ordering = "BEFORE"
+side = "CLIENT"
