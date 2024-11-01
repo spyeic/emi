@@ -156,6 +156,7 @@ public class EmiRecipes {
 			this.recipes = List.copyOf(recipes);
 	
 			Object2IntMap<Identifier> duplicateIds = new Object2IntOpenHashMap<>();
+			Set<Identifier> incorrectIds = new ObjectArraySet<>();
 			for (EmiRecipe recipe : recipes) {
 				Identifier id = recipe.getId();
 				EmiRecipeCategory category = recipe.getCategory();
@@ -178,12 +179,19 @@ public class EmiRecipes {
 					} else {
 						byId.put(id, recipe);
 					}
+
+					if (!id.getPath().startsWith("/") && !recipeIds.containsValue(id)) {
+						incorrectIds.add(id);
+					}
 				}
 			}
 	
 			if (EmiConfig.devMode) {
 				for (Identifier id : duplicateIds.keySet()) {
 					EmiReloadLog.warn(duplicateIds.getInt(id) + " recipes loaded with the same id: " + id);
+				}
+				for (Identifier id : incorrectIds) {
+					EmiReloadLog.warn("Recipe " + id + " not present in recipe manager. Consider prefixing its path with '/' if it is synthetic.");
 				}
 			}
 	
@@ -215,13 +223,28 @@ public class EmiRecipes {
 				}
 			}
 			for (EmiStack key : byInput.keySet()) {
-				this.byInput.put(key, byInput.get(key).stream().toList());
+				Set<EmiRecipe> r = byInput.getOrDefault(key, null);
+				if (r != null) {
+					this.byInput.put(key, r.stream().toList());
+				} else {
+					EmiReloadLog.warn("Stack illegally self-mutated during recipe bake, causing recipe loss: " + key);
+				}
 			}
 			for (EmiStack key : byOutput.keySet()) {
-				this.byOutput.put(key, byOutput.get(key).stream().toList());
+				Set<EmiRecipe> r = byOutput.getOrDefault(key, null);
+				if (r != null) {
+					this.byOutput.put(key, r.stream().toList());
+				} else {
+					EmiReloadLog.warn("Stack illegally self-mutated during recipe bake, causing recipe loss: " + key);
+				}
 			}
 			for (EmiRecipeCategory category : workstations.keySet()) {
-				workstations.put(category, workstations.get(category).stream().distinct().toList());
+				List<EmiIngredient> w = workstations.getOrDefault(category, null);
+				if (w != null) {
+					workstations.put(category, w.stream().distinct().toList());
+				} else {
+					EmiReloadLog.warn("Recipe category illegally self-mutated during recipe bake, causing recipe loss: " + category);
+				}
 			}
 			for (Map.Entry<EmiRecipeCategory, List<EmiRecipe>> entry : byCategory.entrySet()) {
 				for (EmiIngredient ingredient : workstations.getOrDefault(entry.getKey(), List.of())) {
@@ -233,6 +256,7 @@ public class EmiRecipes {
 
 			if (EmiConfig.devMode) {
 				EmiDev.duplicateRecipeIds = duplicateIds.keySet();
+				EmiDev.incorrectRecipeIds = incorrectIds;
 			}
 		}
 
