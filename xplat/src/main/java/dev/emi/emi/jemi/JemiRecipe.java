@@ -21,6 +21,7 @@ import dev.emi.emi.jemi.widget.JemiTankWidget;
 import dev.emi.emi.runtime.EmiDrawContext;
 import dev.emi.emi.screen.EmiScreenManager;
 import mezz.jei.api.gui.IRecipeLayoutDrawable;
+import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.inputs.IJeiUserInput;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.category.IRecipeCategory;
@@ -163,7 +164,10 @@ public class JemiRecipe<T> implements EmiRecipe {
 			EmiDrawContext context = EmiDrawContext.wrap(draw);
 			context.push();
 			context.matrices().translate(x, y, 0);
-			category.getBackground().draw(context.raw());
+			IDrawable background = category.getBackground();
+			if (background != null) {
+				background.draw(context.raw());
+			}
 			category.draw(recipe, recipeLayoutDrawable.getRecipeSlotsView(), context.raw(), mouseX, mouseY);
 			context.resetColor();
 			context.pop();
