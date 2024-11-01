@@ -215,7 +215,7 @@ public class BoMScreen extends Screen {
 		view.translate(width / 2, height / 2, 0);
 		view.scale(scale, scale, 1);
 		view.translate(offX, offY, 0);
-		RenderSystem.applyModelViewMatrix();
+		EmiPort.applyModelViewMatrix();
 		if (BoM.tree != null) {
 			batcher.begin(0, 0, 0);
 			int cy = nodeHeight * NODE_VERTICAL_SPACING * 2;
@@ -250,7 +250,7 @@ public class BoMScreen extends Screen {
 		}
 
 		view.pop();
-		RenderSystem.applyModelViewMatrix();
+		EmiPort.applyModelViewMatrix();
 
 		if (help.contains(mouseX, mouseY)) {
 			context.setColor(0.5f, 0.6f, 1f, 1f);
