@@ -36,6 +36,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.util.Identifier;
 
@@ -164,7 +165,8 @@ public class EmiRecipes {
 						byId.put(id, recipe);
 					}
 
-					if (!id.getPath().startsWith("/") && !recipeIds.containsValue(id)) {
+					MinecraftClient client = MinecraftClient.getInstance();
+					if (!id.getPath().startsWith("/") && client.world != null && client.world.getRecipeManager().get(id).isEmpty()) {
 						incorrectIds.add(id);
 					}
 				}
