@@ -223,13 +223,28 @@ public class EmiRecipes {
 				}
 			}
 			for (EmiStack key : byInput.keySet()) {
-				this.byInput.put(key, byInput.get(key).stream().toList());
+				Set<EmiRecipe> r = byInput.getOrDefault(key, null);
+				if (r != null) {
+					this.byInput.put(key, r.stream().toList());
+				} else {
+					EmiReloadLog.warn("Stack illegally self-mutated during recipe bake, causing recipe loss: " + key);
+				}
 			}
 			for (EmiStack key : byOutput.keySet()) {
-				this.byOutput.put(key, byOutput.get(key).stream().toList());
+				Set<EmiRecipe> r = byOutput.getOrDefault(key, null);
+				if (r != null) {
+					this.byOutput.put(key, r.stream().toList());
+				} else {
+					EmiReloadLog.warn("Stack illegally self-mutated during recipe bake, causing recipe loss: " + key);
+				}
 			}
 			for (EmiRecipeCategory category : workstations.keySet()) {
-				workstations.put(category, workstations.get(category).stream().distinct().toList());
+				List<EmiIngredient> w = workstations.getOrDefault(category, null);
+				if (w != null) {
+					workstations.put(category, w.stream().distinct().toList());
+				} else {
+					EmiReloadLog.warn("Recipe category illegally self-mutated during recipe bake, causing recipe loss: " + category);
+				}
 			}
 			for (Map.Entry<EmiRecipeCategory, List<EmiRecipe>> entry : byCategory.entrySet()) {
 				for (EmiIngredient ingredient : workstations.getOrDefault(entry.getKey(), List.of())) {
