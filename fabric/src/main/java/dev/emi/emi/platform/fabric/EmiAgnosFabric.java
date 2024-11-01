@@ -173,7 +173,7 @@ public class EmiAgnosFabric extends EmiAgnos {
 							return;
 						}
 						if (BrewingRecipeRegistry.isBrewable(potion)) {
-							Identifier id = new Identifier("emi", "brewing/item/"
+							Identifier id = new Identifier("emi", "/brewing/item/"
 								+ EmiUtil.subId(entry.getKey().get().getValue()) + "/" + gid + "/" + iid + "/" + oid);
 							registry.addRecipe(new EmiBrewingRecipe(
 								EmiStack.of(EmiPort.setPotion(new ItemStack((Item) ((BrewingRecipeRegistryRecipeAccessor) recipe).getInput()), potion)), EmiIngredient.of(recipeIngredient),
