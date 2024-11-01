@@ -1,3 +1,6 @@
+### Additions
+* Added support for quoting in search queries and OR splitting up words rather than needing a space
+
 ### Tweaks
 * Tweak a small few recipe IDs to be synthetic when they previously weren't
 * Updated config UI on modern versions to be more similar to vanilla changes
