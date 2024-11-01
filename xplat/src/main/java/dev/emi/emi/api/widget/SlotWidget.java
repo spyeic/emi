@@ -283,7 +283,11 @@ public class SlotWidget extends Widget {
 		EmiRecipe recipe = getRecipe();
 		if (canResolve()) {
 			if (function.apply(EmiConfig.defaultStack)) {
-				BoM.addRecipe(RecipeScreen.resolve, recipe);
+				if (BoM.isDefaultRecipe(RecipeScreen.resolve, recipe)) {
+					BoM.removeRecipe(RecipeScreen.resolve, recipe);
+				} else {
+					BoM.addRecipe(RecipeScreen.resolve, recipe);
+				}
 				EmiHistory.pop();
 				return true;
 			} else if (function.apply(EmiConfig.viewRecipes)) {
