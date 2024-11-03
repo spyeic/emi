@@ -131,6 +131,14 @@ public class EmiConfig {
 	@ConfigValue("ui.empty-search-sidebar-focus")
 	public static SidebarType emptySearchSidebarFocus = SidebarType.NONE;
 
+	@Comment("Whether the EMI config button should be visible.")
+	@ConfigValue("ui.emi-config-button-visibility")
+	public static ButtonVisibility emiConfigButtonVisibility = ButtonVisibility.SHOWN;
+
+	@Comment("Whether the recipe tree button should be visible.")
+	@ConfigValue("ui.recipe-tree-button-visibility")
+	public static ButtonVisibility recipeTreeButtonVisibility = ButtonVisibility.AUTO;
+
 	@ConfigGroup("ui.recipe-screen")
 	@Comment("The maximum height the recipe screen will grow to be if space is available in pixels.")
 	@ConfigValue("ui.maximum-recipe-screen-height")

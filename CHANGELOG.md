@@ -1,12 +1,12 @@
 ### Additions
-* Added support for quoting in search queries and OR splitting up words rather than needing a space
+* Added visibility options for the EMI config and recipe tree buttons
+* EMI config button now is visible by default when toggled, to prevent people from accidentally hiding the mod without knowing how to undo it
 
 ### Tweaks
-* Tweak a small few recipe IDs to be synthetic when they previously weren't
-* Updated config UI on modern versions to be more similar to vanilla changes
-* Tweaked "default stack" bind to also toggle during resolution
+* EMI visibility toast is now only shown when help level is verbose, due to other features preventing accidental hiding
+* EMI config enum selection screen now is consistent with the rest of the config screen on later versions
 
 ### Fixes
-* Added additional dev mode nags for synthetic IDs #730
-* Added further safety around recipe baking to prevent self mutation from affecting EMI significantly #776
-* Further update JEI integration with null backgrounds #755
+* Fixed JEI dependency on 1.19 versions #780
+* Fixed stack default bind not toggling in recipe tree
+* #689
