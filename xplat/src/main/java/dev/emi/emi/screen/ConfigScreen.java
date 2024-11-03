@@ -369,8 +369,6 @@ public class ConfigScreen extends Screen {
 		this.renderBackgroundTexture(context.raw());
 		list.render(context.raw(), mouseX, mouseY, delta);
 		super.render(context.raw(), mouseX, mouseY, delta);
-		list.render(context.raw(), mouseX, mouseY, delta);
-		super.render(context.raw(), mouseX, mouseY, delta);
 		if (list.getHoveredEntry() != null) {
 			EmiRenderHelper.drawTooltip(this, context, list.getHoveredEntry().getTooltip(mouseX, mouseY), mouseX, mouseY, Math.min(width / 2 - 16, maxWidth));
 		}

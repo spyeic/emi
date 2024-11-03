@@ -508,6 +508,17 @@ public class EmiScreenManager {
 		return getHoveredStack(mouseX, mouseY, notClick, false);
 	}
 
+	public static int getDebugTextX() {
+		int x = 4;
+		if (emi.visible) {
+			x = Math.max(4, 4 + 22);
+		}
+		if (tree.visible) {
+			x = Math.max(4, 4 + 22 + 22);
+		}
+		return x;
+	}
+
 	public static EmiStackInteraction getHoveredStack(int mouseX, int mouseY, boolean notClick,
 			boolean ignoreLastHoveredCraftable) {
 		if (client.currentScreen == null) {
@@ -591,35 +602,38 @@ public class EmiScreenManager {
 			return;
 		}
 		boolean visible = !isDisabled();
-		emi.visible = visible;
-		tree.visible = visible;
+		emi.visible = EmiConfig.emiConfigButtonVisibility.resolve(visible);
+		tree.visible = EmiConfig.recipeTreeButtonVisibility.resolve(visible);
 		for (SidebarPanel panel : panels) {
 			panel.updateWidgetVisibility();
 		}
+		renderWidgets(context, mouseX, mouseY, delta, base);
 		if (isDisabled()) {
 			int screenHeight = base.screen().height;
 			if (!EmiReloadManager.isLoaded()) {
+				int reloadInfoX = getDebugTextX();
 				if (EmiReloadManager.getStatus() == -1) {
-					context.drawTextWithShadow(EmiPort.translatable("emi.reloading.error"), 4, screenHeight - 16);
+					context.drawTextWithShadow(EmiPort.translatable("emi.reloading.error"), reloadInfoX, screenHeight - 16);
 				} else if (EmiReloadManager.getStatus() == 0) {
-					context.drawTextWithShadow(EmiPort.translatable("emi.reloading.waiting"), 4, screenHeight - 16);
+					context.drawTextWithShadow(EmiPort.translatable("emi.reloading.waiting"), reloadInfoX, screenHeight - 16);
 				} else {
-					context.drawTextWithShadow(EmiPort.translatable("emi.reloading"), 4, screenHeight - 16);
-					context.drawTextWithShadow(EmiReloadManager.reloadStep, 4, screenHeight - 26);
+					context.drawTextWithShadow(EmiPort.translatable("emi.reloading"), reloadInfoX, screenHeight - 16);
+					context.drawTextWithShadow(EmiReloadManager.reloadStep, reloadInfoX, screenHeight - 26);
 					if (System.currentTimeMillis() > EmiReloadManager.reloadWorry) {
-						context.drawTextWithShadow(EmiPort.translatable("emi.reloading.worry"), 4, screenHeight - 36);
+						context.drawTextWithShadow(EmiPort.translatable("emi.reloading.worry"), reloadInfoX, screenHeight - 36);
 					}
 				}
+			} else {
 			}
 			EmiProfiler.pop();
 			lastHoveredCraftable = null;
 			return;
 		} else if (EmiRecipes.activeWorker != null) {
-			context.drawTextWithShadow(EmiPort.translatable("emi.reloading.still_baking_recipes"), 48, base.screen().height - 16);
+			int bakingX = getDebugTextX();
+			context.drawTextWithShadow(EmiPort.translatable("emi.reloading.still_baking_recipes"), bakingX, base.screen().height - 16);
 		} else {
 			renderDevMode(context, mouseX, mouseY, delta, base);
 		}
-		renderWidgets(context, mouseX, mouseY, delta, base);
 		EmiProfiler.push("sidebars");
 		for (SidebarPanel panel : panels) {
 			panel.render(context, mouseX, mouseY, delta);
@@ -764,13 +778,14 @@ public class EmiScreenManager {
 			int color = 0xFFFFFF;
 			Text title = EmiPort.literal("EMI Dev Mode");
 			int off = -16;
+			int devTextX = getDebugTextX();
 			if (!EmiReloadLog.warnings.isEmpty()) {
 				color = 0xFF0000;
 				off = -11;
 				String warnCount = EmiReloadLog.warningCount + " Warnings";
-				context.drawTextWithShadow(EmiPort.literal(warnCount), 48, screen.height - 21, color);
+				context.drawTextWithShadow(EmiPort.literal(warnCount), devTextX, screen.height - 21, color);
 				int width = Math.max(client.textRenderer.getWidth(title), client.textRenderer.getWidth(warnCount));
-				if (mouseX >= 48 && mouseX < width + 48 && mouseY > screen.height - 28) {
+				if (mouseX >= devTextX && mouseX < width + devTextX && mouseY > screen.height - 28) {
 					screen.renderTooltip(context.raw(), Stream.concat(Stream.of(" EMI detected some issues, see log for full details"),
 							EmiReloadLog.warnings.stream()).map(s -> {
 								String a = s;
@@ -782,7 +797,7 @@ public class EmiScreenManager {
 							.collect(Collectors.toList()), 0, 20);
 				}
 			}
-			context.drawTextWithShadow(title, 48, screen.height + off, color);
+			context.drawTextWithShadow(title, devTextX, screen.height + off, color);
 		}
 	}
 
@@ -1279,8 +1294,11 @@ public class EmiScreenManager {
 	public static void toggleVisibility(boolean notify) {
 		EmiConfig.enabled = !EmiConfig.enabled;
 		EmiConfig.writeConfig();
-		if (notify && !EmiConfig.enabled && EmiConfig.helpLevel.has(HelpLevel.NORMAL)) {
+		if (notify && !EmiConfig.enabled && EmiConfig.helpLevel.has(HelpLevel.VERBOSE)) {
 			client.getToastManager().add(new DisabledToast());
+		}
+		if (EmiConfig.enabled) {
+			forceRecalculate();
 		}
 	}
 
