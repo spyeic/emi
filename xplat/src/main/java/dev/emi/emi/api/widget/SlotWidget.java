@@ -283,8 +283,8 @@ public class SlotWidget extends Widget {
 		EmiRecipe recipe = getRecipe();
 		if (canResolve()) {
 			if (function.apply(EmiConfig.defaultStack)) {
-				if (BoM.isDefaultRecipe(RecipeScreen.resolve, recipe)) {
-					BoM.removeRecipe(RecipeScreen.resolve, recipe);
+				if (BoM.isDefaultRecipe(getStack(), recipe)) {
+					BoM.removeRecipe(getStack(), recipe);
 				} else {
 					BoM.addRecipe(RecipeScreen.resolve, recipe);
 				}
