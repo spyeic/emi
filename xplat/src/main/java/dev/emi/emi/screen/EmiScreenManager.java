@@ -7,6 +7,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.netty.buffer.Unpooled;
+import net.minecraft.network.PacketByteBuf;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -1318,15 +1320,13 @@ public class EmiScreenManager {
 		} else {
 			if (!is.isEmpty()) {
 				Identifier id = EmiPort.getItemRegistry().getId(is.getItem());
-				String command = "give @s " + id;
+				String command = "/give @s " + id;
 				if (is.hasNbt()) {
 					command += is.getNbt().toString();
 				}
 				command += " " + amount;
-				if (command.length() < 256) {
-					client.player.sendCommand(command);
-					return true;
-				}
+				client.player.sendChatMessage(command);
+				return true;
 			}
 			return false;
 		}

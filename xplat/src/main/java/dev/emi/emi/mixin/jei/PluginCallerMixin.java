@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import mezz.jei.common.load.PluginCaller;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Unique;
@@ -15,7 +16,6 @@ import com.google.common.collect.Sets;
 import dev.emi.emi.EmiPort;
 import dev.emi.emi.jemi.JemiUtil;
 import mezz.jei.api.IModPlugin;
-import mezz.jei.library.load.PluginCaller;
 import net.minecraft.util.Identifier;
 
 @Pseudo

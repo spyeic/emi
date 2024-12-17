@@ -8,9 +8,8 @@ import com.google.common.collect.Sets;
 
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
+import dev.emi.emi.mixin.jei.accessor.IngredientManagerAccessor;
 import dev.emi.emi.platform.EmiAgnos;
-import dev.emi.emi.registry.EmiPluginContainer;
-import dev.emi.emi.runtime.EmiLog;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.fabric.ingredients.fluids.IJeiFluidIngredient;
 import mezz.jei.api.helpers.IPlatformFluidHelper;
@@ -18,6 +17,7 @@ import mezz.jei.api.ingredients.IIngredientHelper;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.runtime.IIngredientManager;
+import mezz.jei.common.ingredients.TypedIngredient;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemStack;
 
@@ -32,10 +32,10 @@ public class JemiUtil {
 	}
 
 	public static EmiStack getStack(Object ingredient) {
-		Optional<IIngredientType> optional = (Optional<IIngredientType>) (Optional) JemiPlugin.runtime.getIngredientManager()
-			.getIngredientTypeChecked(ingredient);
-		if (optional.isPresent()) {
-			return getStack(optional.get(), ingredient);
+		IIngredientType<?> type = JemiPlugin.runtime.getIngredientManager()
+			.getIngredientType(ingredient);
+		if (type != null) {
+			return getStack(type, ingredient);
 		}
 		return EmiStack.EMPTY;
 	}
@@ -63,13 +63,16 @@ public class JemiUtil {
 		if (stack.isEmpty()) {
 			return Optional.empty();
 		} else if (stack.getKey() instanceof Fluid f) {
-			return JemiPlugin.runtime.getIngredientManager().createTypedIngredient(getFluidType(), getFluidHelper().create(f, stack.getAmount() == 0 ? 1000 : stack.getAmount(), stack.getNbt()));
+			return TypedIngredient.create(((IngredientManagerAccessor) JemiPlugin.runtime.getIngredientManager()).getRegisteredIngredients(), getFluidType(), getFluidHelper().create(f, stack.getAmount() == 0 ? 1000 : stack.getAmount(), stack.getNbt()));
 		} else if (stack instanceof JemiStack js) {
-			return JemiPlugin.runtime.getIngredientManager().getIngredientTypeChecked(js.ingredient)
-				.map(t -> (Optional) JemiPlugin.runtime.getIngredientManager().createTypedIngredient(t, js.ingredient))
-				.orElse(Optional.empty());
+			IIngredientType<Object> type = JemiPlugin.runtime.getIngredientManager().getIngredientType(js.ingredient);
+			if (type != null) {
+				return TypedIngredient.create(((IngredientManagerAccessor) JemiPlugin.runtime.getIngredientManager()).getRegisteredIngredients(), type, js.ingredient);
+			} else {
+				return Optional.empty();
+			}
 		}
-		return (Optional) JemiPlugin.runtime.getIngredientManager().createTypedIngredient(VanillaTypes.ITEM_STACK, stack.getItemStack());
+		return TypedIngredient.create(((IngredientManagerAccessor) JemiPlugin.runtime.getIngredientManager()).getRegisteredIngredients(), VanillaTypes.ITEM_STACK, stack.getItemStack());
 	}
 
 	public static EmiStack getFluidFromJei(Object object) {

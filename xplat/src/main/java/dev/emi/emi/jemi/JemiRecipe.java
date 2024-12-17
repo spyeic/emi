@@ -1,8 +1,9 @@
 package dev.emi.emi.jemi;
 
 import java.util.List;
-import java.util.Optional;
 
+import dev.emi.emi.mixin.jei.accessor.RecipeLayoutLegacyAdapterAccessor;
+import mezz.jei.common.focus.FocusGroup;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.Lists;
@@ -28,7 +29,6 @@ import mezz.jei.api.gui.IRecipeLayoutDrawable;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import mezz.jei.library.focus.FocusGroup;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
@@ -54,7 +54,7 @@ public class JemiRecipe<T> implements EmiRecipe {
 		if (this.originalId != null) {
 			this.id = EmiPort.id("jei", "/" + EmiUtil.subId(this.originalId));
 		}
-		category.setRecipe(builder, recipe, JemiPlugin.runtime.getJeiHelpers().getFocusFactory().getEmptyFocusGroup());
+		category.setRecipe(builder, recipe, FocusGroup.EMPTY);
 		for (JemiRecipeSlotBuilder jrsb : builder.slots) {
 			jrsb.acceptor.coerceStacks(jrsb.tooltipCallback, jrsb.renderers);
 		}
@@ -105,12 +105,12 @@ public class JemiRecipe<T> implements EmiRecipe {
 
 	@Override
 	public int getDisplayWidth() {
-		return category.getWidth();
+		return category.getBackground().getWidth();
 	}
 
 	@Override
 	public int getDisplayHeight() {
-		return category.getHeight();
+		return category.getBackground().getWidth();
 	}
 
 	@Override
@@ -121,14 +121,14 @@ public class JemiRecipe<T> implements EmiRecipe {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void addWidgets(WidgetHolder widgets) {
-		Optional<IRecipeLayoutDrawable<T>> opt = JemiPlugin.runtime.getRecipeManager().createRecipeLayoutDrawable(category, recipe, FocusGroup.EMPTY);
+		IRecipeLayoutDrawable opt = JemiPlugin.runtime.getRecipeManager().createRecipeLayoutDrawable(category, recipe, null);
 		JemiRecipeLayoutBuilder builder = new JemiRecipeLayoutBuilder();
-		category.setRecipe(builder, recipe, JemiPlugin.runtime.getJeiHelpers().getFocusFactory().getEmptyFocusGroup());
+		category.setRecipe(builder, recipe, FocusGroup.EMPTY);
 		for (JemiRecipeSlotBuilder jrsb : builder.slots) {
 			jrsb.acceptor.coerceStacks(jrsb.tooltipCallback, jrsb.renderers);
 		}
-		if (opt.isPresent()) {
-			widgets.add(new JemiWidget(0, 0, getDisplayWidth(), getDisplayHeight(), opt.get()));
+		if (opt != null) {
+			widgets.add(new JemiWidget(0, 0, getDisplayWidth(), getDisplayHeight(), opt));
 			for (JemiRecipeSlotBuilder sb : builder.slots) {
 				JemiRecipeSlot slot = new JemiRecipeSlot(sb);
 				if (slot.tankInfo != null && !slot.getIngredients(JemiUtil.getFluidType()).toList().isEmpty()) {
@@ -142,11 +142,11 @@ public class JemiRecipe<T> implements EmiRecipe {
 
 	public class JemiWidget extends Widget {
 
-		private final IRecipeLayoutDrawable<T> recipeLayoutDrawable;
+		private final IRecipeLayoutDrawable recipeLayoutDrawable;
 		private final Bounds bounds;
 		private final int x, y;
 
-		public JemiWidget(int x, int y, int w, int h, IRecipeLayoutDrawable<T> recipeLayoutDrawable) {
+		public JemiWidget(int x, int y, int w, int h, IRecipeLayoutDrawable recipeLayoutDrawable) {
 			this.recipeLayoutDrawable = recipeLayoutDrawable;
 			this.bounds = new Bounds(x, y, w, h);
 			this.x = x;
@@ -167,14 +167,14 @@ public class JemiRecipe<T> implements EmiRecipe {
 			if (background != null) {
 				background.draw(context.raw());
 			}
-			category.draw(recipe, recipeLayoutDrawable.getRecipeSlotsView(), context.raw(), mouseX, mouseY);
+			category.draw(recipe, ((RecipeLayoutLegacyAdapterAccessor<?>) recipeLayoutDrawable).getRecipeLayout().getRecipeSlots().getView(), context.raw(), mouseX, mouseY);
 			context.resetColor();
 			context.pop();
 		}
 
 		@Override
 		public List<TooltipComponent> getTooltip(int mouseX, int mouseY) {
-			return category.getTooltipStrings(recipe, recipeLayoutDrawable.getRecipeSlotsView(), mouseX, mouseY)
+			return category.getTooltipStrings(recipe, ((RecipeLayoutLegacyAdapterAccessor<?>) recipeLayoutDrawable).getRecipeLayout().getRecipeSlots().getView(), mouseX, mouseY)
 				.stream()
 				.map(t -> TooltipComponent.of(t.asOrderedText()))
 				.toList();

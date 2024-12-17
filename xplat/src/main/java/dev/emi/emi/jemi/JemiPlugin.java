@@ -1,9 +1,6 @@
 package dev.emi.emi.jemi;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -36,6 +33,7 @@ import dev.emi.emi.jemi.runtime.JemiDragDropHandler;
 import dev.emi.emi.jemi.runtime.JemiIngredientFilter;
 import dev.emi.emi.jemi.runtime.JemiIngredientListOverlay;
 import dev.emi.emi.jemi.runtime.JemiRecipesGui;
+import dev.emi.emi.mixin.jei.GuiScreenHelperMixin;
 import dev.emi.emi.platform.EmiAgnos;
 import dev.emi.emi.registry.EmiPluginContainer;
 import dev.emi.emi.registry.EmiRecipeFiller;
@@ -47,6 +45,7 @@ import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.gui.handlers.IGlobalGuiHandler;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.IIngredientTypeWithSubtypes;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -56,16 +55,21 @@ import mezz.jei.api.ingredients.subtypes.UidContext;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import mezz.jei.api.recipe.transfer.IRecipeTransferHandler;
 import mezz.jei.api.recipe.vanilla.IJeiIngredientInfoRecipe;
 import mezz.jei.api.registration.IModIngredientRegistration;
-import mezz.jei.api.registration.IRuntimeRegistration;
 import mezz.jei.api.registration.ISubtypeRegistration;
-import mezz.jei.api.runtime.IClickableIngredient;
 import mezz.jei.api.runtime.IIngredientManager;
 import mezz.jei.api.runtime.IJeiRuntime;
-import mezz.jei.library.ingredients.subtypes.SubtypeInterpreters;
-import mezz.jei.library.load.registration.SubtypeRegistration;
-import net.minecraft.client.util.math.Rect2i;
+import mezz.jei.common.focus.FocusGroup;
+import mezz.jei.common.gui.GuiContainerHandlers;
+import mezz.jei.common.ingredients.subtypes.SubtypeInterpreters;
+import mezz.jei.common.input.IClickedIngredient;
+import mezz.jei.common.load.registration.SubtypeRegistration;
+import mezz.jei.common.recipes.RecipeTransferManager;
+import mezz.jei.common.util.ImmutableRect2i;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
 import net.minecraft.recipe.CraftingRecipe;
@@ -116,21 +120,22 @@ public class JemiPlugin implements IModPlugin, EmiPlugin {
 	}
 
 	@Override
-	public void registerRuntime(IRuntimeRegistration registration) {
-		registration.setIngredientListOverlay(new JemiIngredientListOverlay());
-		registration.setBookmarkOverlay(new JemiBookmarkOverlay());
-		registration.setRecipesGui(new JemiRecipesGui());
-		registration.setIngredientFilter(new JemiIngredientFilter());
-	}
-
-	@Override
 	public void onRuntimeAvailable(IJeiRuntime runtime) {
 		JemiPlugin.runtime = runtime;
 	}
 
-	@Override
-	public void onRuntimeUnavailable() {
-		JemiPlugin.runtime = null;
+	public static Stream<ImmutableRect2i> getGuiExclusionAreas(List<IGlobalGuiHandler> globalGuiHandlers, GuiContainerHandlers guiContainerHandlers, Screen screen) {
+		Stream<ImmutableRect2i> globalGuiHandlerExclusionAreas = globalGuiHandlers.stream()
+				.map(IGlobalGuiHandler::getGuiExtraAreas)
+				.flatMap(Collection::stream)
+				.map(ImmutableRect2i::new);
+
+		if (screen instanceof HandledScreen<?> guiContainer) {
+			Stream<ImmutableRect2i> guiExtraAreas = guiContainerHandlers.getGuiExtraAreas(guiContainer);
+			return Stream.concat(globalGuiHandlerExclusionAreas, guiExtraAreas);
+		} else {
+			return globalGuiHandlerExclusionAreas;
+		}
 	}
 
 	@Override
@@ -153,9 +158,10 @@ public class JemiPlugin implements IModPlugin, EmiPlugin {
 
 		EmiReloadManager.step(EmiPort.literal("Loading information from JEI..."), 5_000);
 		registry.addGenericExclusionArea((screen, consumer) -> {
-			if (runtime != null && runtime.getScreenHelper() != null) {
-				List<Rect2i> areas = runtime.getScreenHelper().getGuiExclusionAreas(screen).toList();
-				for (Rect2i r : areas) {
+			if (runtime != null) {
+				ScreenHelper.INSTANCE.updateGuiExclusionAreas(screen);
+				List<ImmutableRect2i> areas = ScreenHelper.INSTANCE.getGuiExclusionAreas().stream().toList();
+				for (ImmutableRect2i r : areas) {
 					if (r != null) {
 						consumer.accept(new Bounds(r.getX(), r.getY(), r.getWidth(), r.getHeight()));
 					}
@@ -164,8 +170,8 @@ public class JemiPlugin implements IModPlugin, EmiPlugin {
 		});
 
 		registry.addGenericStackProvider((screen, x, y) -> {
-			return new EmiStackInteraction(runtime.getScreenHelper().getClickableIngredientUnderMouse(screen, x, y)
-					.map(IClickableIngredient::getTypedIngredient).map(JemiUtil::getStack).findFirst().orElse(EmiStack.EMPTY), null, false);
+			return new EmiStackInteraction(ScreenHelper.getClickableIngredientUnderMouse(screen, x, y)
+					.map(IClickedIngredient::getTypedIngredient).map(JemiUtil::getStack).findFirst().orElse(EmiStack.EMPTY), null, false);
 		});
 
 		registry.addGenericDragDropHandler(new JemiDragDropHandler());
@@ -314,7 +320,7 @@ public class JemiPlugin implements IModPlugin, EmiPlugin {
 			try {
 				if (category.isHandled(recipe)) {
 					JemiRecipeLayoutBuilder builder = new JemiRecipeLayoutBuilder();
-					category.setRecipe(builder, recipe, runtime.getJeiHelpers().getFocusFactory().getEmptyFocusGroup());
+					category.setRecipe(builder, recipe, FocusGroup.EMPTY);
 					List<EmiIngredient> inputs = Lists.newArrayList();
 					List<EmiStack> outputs = Lists.newArrayList();
 					for (JemiIngredientAcceptor acceptor : builder.ingredients) {
@@ -370,7 +376,7 @@ public class JemiPlugin implements IModPlugin, EmiPlugin {
 		registry.removeRecipes(r -> r instanceof EmiCraftingRecipe && replaced.contains(r.getId()) && !replacements.contains(r));
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings({"unchecked", "removal"})
 	private void parseSubtypes(EmiRegistry registry) {
 		if (subtypeManager != null) {
 			IIngredientManager im = runtime.getIngredientManager();
@@ -422,8 +428,12 @@ public class JemiPlugin implements IModPlugin, EmiPlugin {
 
 	private static EmiRecipeHandler<?> getRecipeHandler(ScreenHandler handler, EmiRecipe recipe) {
 		IRecipeCategory<?> category = CATEGORY_MAP.getOrDefault(recipe.getCategory(), null);
+
 		if (category != null) {
-			return runtime.getRecipeTransferManager().getRecipeTransferHandler(handler, category).map(JemiRecipeHandler::new).orElse(null);
+			IRecipeTransferHandler<ScreenHandler, ?> transferHandler = ((RecipeTransferManager) runtime.getRecipesGui()).getRecipeTransferHandler(handler, category);
+            if (transferHandler != null) {
+				return new JemiRecipeHandler<>(transferHandler);
+			}
 		}
 		return null;
 	}

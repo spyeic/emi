@@ -18,6 +18,8 @@ import dev.emi.emi.api.widget.Widget;
 import dev.emi.emi.jemi.impl.JemiRecipeLayoutBuilder;
 import dev.emi.emi.jemi.impl.JemiRecipeSlot;
 import dev.emi.emi.jemi.impl.JemiRecipeSlotsView;
+import dev.emi.emi.mixin.jei.accessor.BasicRecipeTransferHandlerAccessor;
+import dev.emi.emi.mixin.jei.accessor.PlayerRecipeTransferHandlerAccessor;
 import dev.emi.emi.runtime.EmiDrawContext;
 import dev.emi.emi.screen.EmiScreenManager;
 import mezz.jei.api.gui.builder.IIngredientAcceptor;
@@ -27,6 +29,7 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.transfer.IRecipeTransferError;
 import mezz.jei.api.recipe.transfer.IRecipeTransferHandler;
+import mezz.jei.common.transfer.PlayerRecipeTransferHandler;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.util.math.MatrixStack;
@@ -39,9 +42,17 @@ public class JemiRecipeHandler<T extends ScreenHandler, R> implements EmiRecipeH
 	//private IRecipeCategory<R> category;
 	public IRecipeTransferHandler<T, R> handler;
 
+	private static <T extends ScreenHandler, R> RecipeType getRecipeType(IRecipeTransferHandler<T, R> handler) {
+		if (handler instanceof PlayerRecipeTransferHandler) {
+			return ((BasicRecipeTransferHandlerAccessor) ((PlayerRecipeTransferHandlerAccessor) handler).getRecipeTransferHandler()).getTransferInfo().getRecipeType();
+		} else {
+			return ((BasicRecipeTransferHandlerAccessor) handler).getTransferInfo().getRecipeType();
+		}
+	}
+
 	public JemiRecipeHandler(IRecipeTransferHandler<T, R> handler) {
 		this.handler = handler;
-		type = handler.getRecipeType();
+		type = (RecipeType<R>) getRecipeType(handler);
 		/*
 		if (type != null) {
 			List<IRecipeCategory<R>> categories = (List<IRecipeCategory<R>>) (Object) JemiPlugin.runtime.getRecipeManager().createRecipeCategoryLookup().includeHidden().limitTypes(List.of(type)).get().toList();
@@ -69,16 +80,16 @@ public class JemiRecipeHandler<T extends ScreenHandler, R> implements EmiRecipeH
 	@Override
 	public boolean canCraft(EmiRecipe recipe, EmiCraftContext<T> context) {
 		IRecipeTransferError err = jeiCraft(recipe, context, false, null);
-		return err == null || err.getType().allowsTransfer;
+		return err == null || err.getType() == IRecipeTransferError.Type.COSMETIC;
 	}
 
 	@Override
 	public boolean craft(EmiRecipe recipe, EmiCraftContext<T> context) {
 		IRecipeTransferError err = jeiCraft(recipe, context, true, null);
-		if (err == null || err.getType().allowsTransfer) {
+		if (err == null || err.getType() == IRecipeTransferError.Type.COSMETIC) {
 			MinecraftClient.getInstance().setScreen(context.getScreen());
 		}
-		return err == null || err.getType().allowsTransfer;
+		return err == null || err.getType() == IRecipeTransferError.Type.COSMETIC;
 	}
 
 	@Override

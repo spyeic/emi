@@ -16,8 +16,14 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.runtime.IRecipesGui;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.Identifier;
 
 public class JemiRecipesGui implements IRecipesGui {
+
+	@Override
+	public <V> void show(IFocus<V> focus) {
+		show(List.of(focus));
+	}
 
 	@Override
 	public void show(List<IFocus<?>> focuses) {
@@ -46,17 +52,28 @@ public class JemiRecipesGui implements IRecipesGui {
 	}
 
 	@Override
-	public <T> Optional<T> getIngredientUnderMouse(IIngredientType<T> ingredientType) {
+	public <T> T getIngredientUnderMouse(IIngredientType<T> ingredientType) {
 		MinecraftClient client = MinecraftClient.getInstance();
 		if (client.currentScreen instanceof RecipeScreen screen) {
 			EmiIngredient stack = screen.getHoveredStack();
 			if (!stack.isEmpty()) {
 				Optional<ITypedIngredient<?>> opt = JemiUtil.getTyped(stack.getEmiStacks().get(0));
 				if (opt.isPresent()) {
-					return opt.get().getIngredient(ingredientType);
+					return opt.get().getIngredient(ingredientType).orElse(null);
 				}
 			}
 		}
-		return Optional.empty();
+		return null;
+	}
+
+	@Override
+	public void showCategories(List<Identifier> recipeCategoryUids) {
+		for (Identifier uid : recipeCategoryUids) {
+			for (EmiRecipeCategory category : EmiApi.getRecipeManager().getCategories()) {
+				if (category.getId().equals(uid)) {
+					EmiApi.displayRecipeCategory(category);
+				}
+			}
+		}
 	}
 }

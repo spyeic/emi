@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import net.minecraftforge.fluids.FluidAttributes;
 import org.objectweb.asm.Type;
 
 import com.google.common.collect.Lists;
@@ -40,7 +41,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.PotionItem;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.potion.Potion;
-import net.minecraft.potion.PotionUtil;
 import net.minecraft.potion.Potions;
 import net.minecraft.recipe.BrewingRecipeRegistry;
 import net.minecraft.recipe.Ingredient;
@@ -49,7 +49,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.RegistryEntry;
 import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.brewing.BrewingRecipe;
 import net.minecraftforge.common.brewing.IBrewingRecipe;
@@ -164,11 +163,11 @@ public class EmiAgnosForge extends EmiAgnos {
 						if (recipe.ingredient.getMatchingStacks().length > 0) {
 							Identifier id = EmiPort.id("emi", "/brewing/" + pid
 								+ "/" + EmiUtil.subId(recipe.ingredient.getMatchingStacks()[0].getItem())
-								+ "/" + EmiUtil.subId(EmiPort.getPotionRegistry().getId(recipe.input.get()))
-								+ "/" + EmiUtil.subId(EmiPort.getPotionRegistry().getId(recipe.output.get())));
+								+ "/" + EmiUtil.subId(EmiPort.getPotionRegistry().getId(recipe.f_43532_.get()))
+								+ "/" + EmiUtil.subId(EmiPort.getPotionRegistry().getId(recipe.f_43534_.get())));
 							registry.addRecipe(new EmiBrewingRecipe(
-								EmiStack.of(EmiPort.setPotion(stack.copy(), recipe.input.get())), EmiIngredient.of(recipe.ingredient),
-								EmiStack.of(EmiPort.setPotion(stack.copy(), recipe.output.get())), id));
+								EmiStack.of(EmiPort.setPotion(stack.copy(), recipe.f_43532_.get())), EmiIngredient.of(recipe.ingredient),
+								EmiStack.of(EmiPort.setPotion(stack.copy(), recipe.f_43534_.get())), id));
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -181,8 +180,8 @@ public class EmiAgnosForge extends EmiAgnos {
 			try {
 				if (recipe.ingredient.getMatchingStacks().length > 0) {
 					String gid = EmiUtil.subId(recipe.ingredient.getMatchingStacks()[0].getItem());
-					String iid = EmiUtil.subId(recipe.input.get());
-					String oid = EmiUtil.subId(recipe.output.get());
+					String iid = EmiUtil.subId(recipe.f_43532_.get());
+					String oid = EmiUtil.subId(recipe.f_43534_.get());
 					Consumer<RegistryEntry<Potion>> potionRecipeGen = entry -> {
 						Potion potion = entry.value();
 						if (potion == Potions.EMPTY) {
@@ -192,11 +191,11 @@ public class EmiAgnosForge extends EmiAgnos {
 							Identifier id = EmiPort.id("emi", "brewing/item/"
 								+ EmiUtil.subId(entry.getKey().get().getValue()) + "/" + gid + "/" + iid + "/" + oid);
 							registry.addRecipe(new EmiBrewingRecipe(
-								EmiStack.of(EmiPort.setPotion(new ItemStack(recipe.input.get()), potion)), EmiIngredient.of(recipe.ingredient),
-								EmiStack.of(EmiPort.setPotion(new ItemStack(recipe.output.get()), potion)), id));
+								EmiStack.of(EmiPort.setPotion(new ItemStack(recipe.f_43532_.get()), potion)), EmiIngredient.of(recipe.ingredient),
+								EmiStack.of(EmiPort.setPotion(new ItemStack(recipe.f_43534_.get()), potion)), id));
 						}
 					};
-					if ((recipe.input.get() instanceof PotionItem)) {
+					if ((recipe.f_43532_.get() instanceof PotionItem)) {
 						EmiPort.getPotionRegistry().streamEntries().forEach(potionRecipeGen);
 					} else {
 						potionRecipeGen.accept(EmiPort.getPotionRegistry().getEntry(EmiPort.getPotionRegistry().getRawId(Potions.AWKWARD)).get());
@@ -267,15 +266,15 @@ public class EmiAgnosForge extends EmiAgnos {
 	@Override
 	protected boolean isFloatyFluidAgnos(FluidEmiStack stack) {
 		FluidStack fs = new FluidStack(stack.getKeyOfType(Fluid.class), 1000, stack.getNbt());
-		return fs.getFluid().getFluidType().isLighterThanAir();
+		return fs.getFluid().getAttributes().isLighterThanAir();
 	}
 
 	@Override
 	protected void renderFluidAgnos(FluidEmiStack stack, MatrixStack matrices, int x, int y, float delta, int xOff, int yOff, int width, int height) {
 		FluidStack fs = new FluidStack(stack.getKeyOfType(Fluid.class), 1000, stack.getNbt());
-		IClientFluidTypeExtensions ext = IClientFluidTypeExtensions.of(fs.getFluid());
-		Identifier texture = ext.getStillTexture(fs);
-		int color = ext.getTintColor(fs);
+		FluidAttributes fa = fs.getFluid().getAttributes();
+		Identifier texture = fa.getStillTexture(fs);
+		int color = fa.getColor(fs);
 		MinecraftClient client = MinecraftClient.getInstance();
 		Sprite sprite = client.getSpriteAtlas(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE).apply(texture);
 		EmiRenderHelper.drawTintedSprite(matrices, sprite, color, x, y, xOff, yOff, width, height);

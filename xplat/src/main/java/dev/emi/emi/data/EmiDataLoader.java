@@ -1,5 +1,6 @@
 package dev.emi.emi.data;
 
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -41,17 +42,22 @@ public class EmiDataLoader<T> extends SinglePreparationResourceReloader<T>
 			if (!id.getNamespace().equals("emi")) {
 				continue;
 			}
-			for (Resource resource : manager.getAllResources(id)) {
-				try {
-					InputStreamReader reader = new InputStreamReader(EmiPort.getInputStream(resource));
-					JsonObject json = JsonHelper.deserialize(GSON, reader, JsonObject.class);
-					prepare.accept(t, json, id);
-				} catch (Exception e) {
-					EmiLog.error("Error loading data for " + this.id + " in " + id);
-					e.printStackTrace();
-				}
-			}
-		}
+            try {
+                for (Resource resource : manager.getAllResources(id)) {
+                    try {
+                        InputStreamReader reader = new InputStreamReader(EmiPort.getInputStream(resource));
+                        JsonObject json = JsonHelper.deserialize(GSON, reader, JsonObject.class);
+                        prepare.accept(t, json, id);
+                    } catch (Exception e) {
+                        EmiLog.error("Error loading data for " + this.id + " in " + id);
+                        e.printStackTrace();
+                    }
+                }
+            } catch (IOException e) {
+                EmiLog.error("Error loading data for " + this.id + " in " + id);
+				e.printStackTrace();
+            }
+        }
 		return t;
 	}
 

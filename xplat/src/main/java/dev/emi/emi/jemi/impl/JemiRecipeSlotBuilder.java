@@ -90,6 +90,11 @@ public class JemiRecipeSlotBuilder implements IRecipeSlotBuilder {
 	}
 
 	@Override
+	public IRecipeSlotBuilder setFluidRenderer(int capacity, boolean showCapacity, int width, int height) {
+		return this.setFluidRenderer(capacity, showCapacity, width, height);
+	}
+
+	@Override
 	public IRecipeSlotBuilder setFluidRenderer(long capacity, boolean showCapacity, int width, int height) {
 		this.tankInfo = new TankInfo(width, height, capacity, showCapacity);
 		return this;

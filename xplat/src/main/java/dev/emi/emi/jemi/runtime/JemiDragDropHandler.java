@@ -7,6 +7,7 @@ import dev.emi.emi.api.EmiDragDropHandler;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.jemi.JemiPlugin;
 import dev.emi.emi.jemi.JemiUtil;
+import dev.emi.emi.jemi.ScreenHelper;
 import dev.emi.emi.runtime.EmiDrawContext;
 import mezz.jei.api.gui.handlers.IGhostIngredientHandler;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -58,9 +59,8 @@ public class JemiDragDropHandler implements EmiDragDropHandler<Screen> {
 
 	@SuppressWarnings("deprecation")
 	private <I> List<IGhostIngredientHandler.Target<I>> getTargets(Screen screen, ITypedIngredient<I> typed) {
-		Optional<IGhostIngredientHandler<Screen>> optGhost = JemiPlugin.runtime.getScreenHelper().getGhostIngredientHandler(screen);
-		if (optGhost.isPresent()) {
-			IGhostIngredientHandler<Screen> ghost = optGhost.get();
+		IGhostIngredientHandler<Screen> ghost = ScreenHelper.INSTANCE.getGhostIngredientHandler(screen);
+		if (ghost != null) {
 			return ghost.getTargets(screen, typed.getIngredient(), false);
 		}
 		return List.of();

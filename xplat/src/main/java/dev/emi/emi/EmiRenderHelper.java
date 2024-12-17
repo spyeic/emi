@@ -88,11 +88,11 @@ public class EmiRenderHelper {
 		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderSystem.setShaderTexture(0, sprite.getAtlas().getId());
 		RenderSystem.enableBlend();
-		
+
 		float r = ((color >> 16) & 255) / 256f;
 		float g = ((color >> 8) & 255) / 256f;
 		float b = (color & 255) / 256f;
-		
+
 		BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
 		bufferBuilder.begin(DrawMode.QUADS, VertexFormats.POSITION_COLOR_TEXTURE);
 		float xMin = (float) x;
@@ -167,30 +167,7 @@ public class EmiRenderHelper {
 		y = Math.max(16, y);
 		// Some mods assume this list will be mutable, oblige them
 		List<TooltipComponent> mutable = Lists.newArrayList();
-		int wrapWidth = Math.max(components.stream()
-			.map(c -> c instanceof OrderedTextTooltipComponent ? 0 : c.getWidth(CLIENT.textRenderer))
-			.max(Integer::compare).orElse(0), maxWidth);
-		for (TooltipComponent comp : components) {
-			if (comp instanceof OrderedTextTooltipComponent ottc && ottc.getWidth(CLIENT.textRenderer) > wrapWidth) {
-				try {
-					OrderedText ordered = ((OrderedTextTooltipComponentAccessor) ottc).getText();
-					MutableText text = Text.empty();
-					// Mojang, what is this??? Please give me some other way to wrap
-					ordered.accept(((var1, style, codepoint) -> {
-						text.append(EmiPort.literal(String.valueOf(Character.toChars(codepoint)), style));
-						return true;
-					}));
-					for (OrderedText o : CLIENT.textRenderer.wrapLines(text, wrapWidth)) {
-						mutable.add(TooltipComponent.of(o));
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					mutable.add(comp);
-				}
-			} else {
-				mutable.add(comp);
-			}
-		}
+		mutable.addAll(components);
 		((ScreenAccessor) screen).invokeRenderTooltipFromComponents(context.raw(), mutable, x, y);
 	}
 
