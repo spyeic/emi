@@ -23,17 +23,17 @@
         "accessor.HoeItemAccessor",
         "accessor.ItemRendererAccessor",
         "accessor.OrderedTextTooltipComponentAccessor",
-        "jei.accessor.RecipesGuiAccessor",
         "accessor.ScreenAccessor",
         "accessor.ShovelItemAccessor",
         "accessor.SmithingRecipeAccessor",
+        "jei.GuiScreenHelperMixin",
+        "jei.JeiRuntimeMixin",
         "jei.PluginCallerMixin",
         "jei.accessor.BasicRecipeTransferHandlerAccessor",
         "jei.accessor.IngredientManagerAccessor",
         "jei.accessor.PlayerRecipeTransferHandlerAccessor",
         "jei.accessor.RecipeLayoutLegacyAdapterAccessor",
-        "jei.GuiScreenHelperMixin",
-        "jei.JeiRuntimeMixin"
+        "jei.RecipeTransferManagerMixin"
     ],
     "mixins": [
     ],

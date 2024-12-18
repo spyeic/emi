@@ -28,12 +28,7 @@ import dev.emi.emi.api.widget.GeneratedSlotWidget;
 import dev.emi.emi.api.widget.SlotWidget;
 import dev.emi.emi.jemi.impl.JemiIngredientAcceptor;
 import dev.emi.emi.jemi.impl.JemiRecipeLayoutBuilder;
-import dev.emi.emi.jemi.runtime.JemiBookmarkOverlay;
 import dev.emi.emi.jemi.runtime.JemiDragDropHandler;
-import dev.emi.emi.jemi.runtime.JemiIngredientFilter;
-import dev.emi.emi.jemi.runtime.JemiIngredientListOverlay;
-import dev.emi.emi.jemi.runtime.JemiRecipesGui;
-import dev.emi.emi.mixin.jei.GuiScreenHelperMixin;
 import dev.emi.emi.platform.EmiAgnos;
 import dev.emi.emi.registry.EmiPluginContainer;
 import dev.emi.emi.registry.EmiRecipeFiller;
@@ -66,7 +61,6 @@ import mezz.jei.common.gui.GuiContainerHandlers;
 import mezz.jei.common.ingredients.subtypes.SubtypeInterpreters;
 import mezz.jei.common.input.IClickedIngredient;
 import mezz.jei.common.load.registration.SubtypeRegistration;
-import mezz.jei.common.recipes.RecipeTransferManager;
 import mezz.jei.common.util.ImmutableRect2i;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -430,7 +424,7 @@ public class JemiPlugin implements IModPlugin, EmiPlugin {
 		IRecipeCategory<?> category = CATEGORY_MAP.getOrDefault(recipe.getCategory(), null);
 
 		if (category != null) {
-			IRecipeTransferHandler<ScreenHandler, ?> transferHandler = ((RecipeTransferManager) runtime.getRecipesGui()).getRecipeTransferHandler(handler, category);
+			IRecipeTransferHandler<ScreenHandler, ?> transferHandler = RecipeTransferManager.INSTANCE.getRecipeTransferHandler(handler, category);
             if (transferHandler != null) {
 				return new JemiRecipeHandler<>(transferHandler);
 			}
